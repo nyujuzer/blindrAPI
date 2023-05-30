@@ -1,0 +1,16 @@
+{
+    "hobbies": [
+      { "id": 1, "hobby": "Reading" },
+      { "id": 2, "hobby": "Gaming" },
+      { "id": 3, "hobby": "Cooking" },
+      { "id": 4, "hobby": "Photography" },
+      { "id": 5, "hobby": "Hiking" },
+      { "id": 6, "hobby": "Painting" },
+      { "id": 7, "hobby": "Playing an instrument" },
+      { "id": 8, "hobby": "Dancing" },
+      { "id": 9, "hobby": "Writing" },
+      { "id": 10, "hobby": "Sports" },
+      { "id": 11, "hobby": "Traveling" },
+      { "id": 12, "hobby": "Yoga" }
+    ]
+  }
