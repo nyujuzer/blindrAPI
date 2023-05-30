@@ -15,7 +15,7 @@ from os import path
 
 def is_email_in_use(email:str):
     # Check if email is already in use
-    users = UserModel.objects.filter(email=email.lower())
+    users = UserModel.objects.filter(email=email)
     return users.exists()
 
 
@@ -67,7 +67,8 @@ from django.http import JsonResponse
 
 @api_view(["GET"])
 def login(request, email, password):
-    if is_email_in_use(email.lower()):
+    print(email)
+    if is_email_in_use(email):
         user = UserModel.objects.filter(email=email).first()
         if user and check_password(password, user.password):
             response = JsonResponse({"login": "successful", 'uid': str(user.userId)})
