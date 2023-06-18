@@ -26,6 +26,7 @@ class Globals:
 
 
         def formatDate(input_string):
+                print(input_string)
                 try:
                         input_date = datetime.strptime(input_string, "%Y. %m. %d.").date()
                 except ValueError:

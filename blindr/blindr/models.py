@@ -37,6 +37,8 @@ class DisplayModel(models.Model):
     preferences = models.IntegerField(validators=[MaxValueValidator(4)])
     hobbies = models.ManyToManyField(hobbiesModel)
     age = models.DateField()
+    longitude = models.CharField(max_length=10, null=True, blank=True)
+    latitude = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.name} - display'

@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
 class displaySerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplayModel
-        fields = ["account",'name', 'gender','preferences', 'hobbies', 'age']
+        fields = ["account",'name', 'gender','preferences', 'hobbies', 'age', 'longitude', 'latitude']
 class ImageModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageModel

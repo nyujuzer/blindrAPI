@@ -1,4 +1,5 @@
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.gis.geoip2 import GeoIP2
 from django.http import JsonResponse, FileResponse
 from django.shortcuts import render
 from .models import UserModel, DisplayModel, ImageModel, hobbiesModel
@@ -6,6 +7,7 @@ from .settings import MEDIA_ROOT, MEDIA_URL
 from .globals import Globals
 import uuid
 from .regHelp import EmailIsAvailable
+from .utils import get_geolocation
 from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, HobbySerializer
 from rest_framework.decorators import api_view
 import hashlib
@@ -24,7 +26,7 @@ def process_data(data):
     processed_data["password"] = make_password(data["password"])
     processed_data['gender'] = Globals.Gender.Encode(data['gender'])
     processed_data['preferences'] = Globals.Gender.Encode(data['preferences'])
-    processed_data['age'] = Globals.formatDate(data["age"])
+    processed_data['age'] = Globals.formatDate(data["age"].replace("-", "/"))
     return processed_data
 
 
@@ -50,24 +52,24 @@ def register(request):
 
     return JsonResponse({"success": False, "error": "all"})
 
-
+@csrf_exempt
 def upload_image(request):
-    if request.method == "POST":
-        image_serializer = ImageModelSerializer(data=request.data)
-        if image_serializer.is_valid():
-            image_serializer.validated_data.get('image')
-            image_serializer.save()
-            return JsonResponse({"success": True})
-        else:
-            return JsonResponse(image_serializer.errors)
-
-    return JsonResponse({"message": "This is a GET request"})
-
+    print(request.POST)
+    if request.method == 'POST' and request.FILES.get('image'):
+        print("hello")
+        image_file = request.FILES['image']
+        # Handle the image file as needed (e.g., save it to a model, process it, etc.)
+        # Example: Saving the image to a model
+        image_model = ImageModel(image=image_file)
+        print(image_file.is_valid())
+        image_model.save()
+        return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+    else:
+        return JsonResponse({'success': False, 'message': 'Image upload failed'})
 from django.http import JsonResponse
 
 @api_view(["GET"])
 def login(request, email, password):
-    print(email)
     if is_email_in_use(email):
         user = UserModel.objects.filter(email=email).first()
         if user and check_password(password, user.password):
@@ -89,12 +91,20 @@ def get_hobbies(request):
     }
     return JsonResponse(data)
 
-
+calls = 0
+@api_view(['POST'])
 def get_matches(request):
-    user = UserModel.objects.filter(email=request.data)
-    # Further implementation
+    print(request.data)
+    user = DisplayModel.objects.filter(account = request.data['uid']).first()
+    update_user(user, request.data['location'])    
+    return JsonResponse({'users':'none yet'})
 
-
+def update_user(user:DisplayModel, location):
+    user.longitude = location['longitude']
+    user.latitude = location['latitude']
+    user.save()
+    # user.update(longitude = location[0])
+    # user.update(latitude = location[1])
 def set_cookies(request, name, password):
     user = UserModel.objects.all().filter(name=name)
     request.session['name'] = name
