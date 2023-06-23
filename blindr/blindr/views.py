@@ -1,13 +1,14 @@
+from math import radians, sin, cos, sqrt, atan2
+from django.contrib.gis.measure import Distance
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.gis.geoip2 import GeoIP2
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse, FileResponse, HttpRequest
 from django.shortcuts import render
 from .models import UserModel, DisplayModel, ImageModel, hobbiesModel
 from .settings import MEDIA_ROOT, MEDIA_URL
 from .globals import Globals
 import uuid
 from .regHelp import EmailIsAvailable
-from .utils import get_geolocation
+from rest_framework.request import Request
 from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, HobbySerializer
 from rest_framework.decorators import api_view
 import hashlib
@@ -15,7 +16,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from os import path
 
 
-def is_email_in_use(email:str):
+def is_email_in_use(email: str):
     # Check if email is already in use
     users = UserModel.objects.filter(email=email)
     return users.exists()
@@ -24,7 +25,7 @@ def is_email_in_use(email:str):
 def process_data(data):
     processed_data = data
     processed_data["password"] = make_password(data["password"])
-    processed_data['gender'] = Globals.Gender.Encode(data['gender'])
+    processed_data['gender'] = int(Globals.Gender.Encode(data['gender']))
     processed_data['preferences'] = Globals.Gender.Encode(data['preferences'])
     processed_data['age'] = Globals.formatDate(data["age"].replace("-", "/"))
     return processed_data
@@ -52,7 +53,9 @@ def register(request):
 
     return JsonResponse({"success": False, "error": "all"})
 
+
 @csrf_exempt
+@api_view(['POST'])
 def upload_image(request):
     print(request.POST)
     if request.method == 'POST' and request.FILES.get('image'):
@@ -66,11 +69,11 @@ def upload_image(request):
         return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
     else:
         return JsonResponse({'success': False, 'message': 'Image upload failed'})
-from django.http import JsonResponse
+
 
 @api_view(["GET"])
 def login(request, email, password):
-    if is_email_in_use(email):
+    if is_email_in_use(email)==True:
         user = UserModel.objects.filter(email=email).first()
         if user and check_password(password, user.password):
             response = JsonResponse({"login": "successful", 'uid': str(user.userId)})
@@ -80,10 +83,11 @@ def login(request, email, password):
             return JsonResponse({"login": "unsuccessful"})
     else:
         print(is_email_in_use(email))
-        return JsonResponse({"login":"unsuccessful"})
+        return JsonResponse({"login": "unsuccessful"})
 
 
-
+@csrf_exempt
+@api_view(["GET"])
 def get_hobbies(request):
     hobbies = hobbiesModel.objects.all()
     data = {
@@ -91,29 +95,58 @@ def get_hobbies(request):
     }
     return JsonResponse(data)
 
-calls = 0
+
+
 @api_view(['POST'])
 def get_matches(request):
     print(request.data)
-    user = DisplayModel.objects.filter(account = request.data['uid']).first()
-    update_user(user, request.data['location'])    
-    return JsonResponse({'users':'none yet'})
+    user_id = request.data['uid']
+    user_longitude = float(request.data['location']['longitude'])
+    user_latitude = float(request.data['location']['latitude'])
 
-def update_user(user:DisplayModel, location):
+    # Get the user's display profile
+    user = DisplayModel.objects.filter(account=user_id).first()
+    if not user:
+        return JsonResponse({'error': 'User not found'})
+
+    # Update user's location
+    user.longitude = user_longitude
+    user.latitude = user_latitude
+    user.save()
+
+    # Filter potential matches based on gender preference
+    potential_matches = DisplayModel.objects.filter(gender=user.preferences)
+
+    # Calculate distances between user and potential matches
+    matches = []
+    for match in potential_matches:
+        print(match)
+        match_longitude = float(match.longitude)
+        match_latitude = float(match.latitude)
+
+        # Calculate distance using the Haversine formula
+        R = 6371  # Radius of the Earth in kilometers
+        dlon = radians(match_longitude - user_longitude)
+        dlat = radians(match_latitude - user_latitude)
+        a = sin(dlat / 2) ** 2 + cos(radians(user_latitude)) * cos(radians(match_latitude)) * sin(dlon / 2) ** 2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        distance = R * c
+        if user.account.maxdist is None or distance < user.account.maxdist:
+            matches.append(matches)
+    print(matches)
+    return JsonResponse({'matches': matches})
+
+def update_user(user: DisplayModel, location):
     user.longitude = location['longitude']
     user.latitude = location['latitude']
     user.save()
-    # user.update(longitude = location[0])
-    # user.update(latitude = location[1])
-def set_cookies(request, name, password):
-    user = UserModel.objects.all().filter(name=name)
-    request.session['name'] = name
-    request.session['pass'] = hashlib.sha256(password.encode("utf-8")).hexdigest()
-    request.session['uid'] = str(user[0].userId)
-    return JsonResponse({"test": "0"})
 
 
 @api_view(["GET", "POST"])
 def video_upload(request):
     # Placeholder, further implementation required
     return JsonResponse("")
+
+
+def test(request):
+    return JsonResponse({"successful build":True})

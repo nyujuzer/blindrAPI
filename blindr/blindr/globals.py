@@ -13,6 +13,21 @@ class Globals:
                                 if gender.name.upper() == nem.upper():
                                         return gender.value
                         else:return Globals.Gender.NONE.value
+                
+                def Decode(code):
+                        if code == 1:
+                                return "MALE"
+                        elif code == 2:
+                                return "FEMALE"
+                        elif code == 3:
+                                return "ENBY"
+                        elif code == 4:
+                                return "ANY"
+                        elif code == 404:
+                                return "NONE"
+                        else:
+                                return "UNKNOWN"
+
 
         def deconstruct(object:object, attribute:str, sep:str):
                 """
