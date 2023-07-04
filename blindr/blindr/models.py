@@ -45,7 +45,7 @@ class MatchesModel(models.Model):
 
 class ImageModel(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='images')
-    isProfileImage = models.BooleanField()
+    isProfilePic= models.BooleanField()
     image = models.ImageField(upload_to="img")
 
     def __str__(self):

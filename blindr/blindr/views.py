@@ -10,6 +10,8 @@ import uuid
 from .regHelp import EmailIsAvailable
 from rest_framework.request import Request
 from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, HobbySerializer
+from django.core.files.storage import FileSystemStorage
+
 from rest_framework.decorators import api_view
 import hashlib
 from django.contrib.auth.hashers import make_password, check_password
@@ -53,22 +55,21 @@ def register(request):
 
     return JsonResponse({"success": False, "error": "all"})
 
-
 @csrf_exempt
 @api_view(['POST'])
 def upload_image(request):
-    print(request.POST)
-    if request.method == 'POST' and request.FILES.get('image'):
-        print("hello")
-        image_file = request.FILES['image']
-        # Handle the image file as needed (e.g., save it to a model, process it, etc.)
-        # Example: Saving the image to a model
-        image_model = ImageModel(image=image_file)
-        print(image_file.is_valid())
-        image_model.save()
-        return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
-    else:
-        return JsonResponse({'success': False, 'message': 'Image upload failed'})
+    if request.method == 'POST':
+        print(request.data)
+        print(request.FILES)
+        user :UserModel = UserModel.objects.get(userId=request.data['uid'])
+        print(user)
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': False}, context={'request': request, 'multipart': True})
+        if serializer.is_valid():
+            print("yay")
+            serializer.save()
+            return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
 
 @api_view(["GET"])
@@ -77,7 +78,6 @@ def login(request, email, password):
         user = UserModel.objects.filter(email=email).first()
         if user and check_password(password, user.password):
             response = JsonResponse({"login": "successful", 'uid': str(user.userId)})
-            print(response.cookies)
             return response
         else:
             return JsonResponse({"login": "unsuccessful"})

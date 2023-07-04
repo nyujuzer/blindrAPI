@@ -12,7 +12,7 @@ class displaySerializer(serializers.ModelSerializer):
 class ImageModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageModel
-        fields = ['userId','image']
+        fields = ['user','image', "isProfilePic"]
 class HobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = hobbiesModel
