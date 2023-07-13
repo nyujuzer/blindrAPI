@@ -1,15 +1,16 @@
 from math import radians, sin, cos, sqrt, atan2
 from django.contrib.gis.measure import Distance
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, FileResponse, HttpRequest
+from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
-from .models import UserModel, DisplayModel, ImageModel, hobbiesModel
+from requests import Response
+from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoModel
 from .settings import MEDIA_ROOT, MEDIA_URL
 from .globals import Globals
 import uuid
 from .regHelp import EmailIsAvailable
 from rest_framework.request import Request
-from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, HobbySerializer
+from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer
 from django.core.files.storage import FileSystemStorage
 
 from rest_framework.decorators import api_view
@@ -57,20 +58,79 @@ def register(request):
 
 @csrf_exempt
 @api_view(['POST'])
-def upload_image(request):
+def finishSignUp(request):      
     if request.method == 'POST':
         print(request.data)
         print(request.FILES)
         user :UserModel = UserModel.objects.get(userId=request.data['uid'])
-        print(user)
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': False}, context={'request': request, 'multipart': True})
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        user.maxdist = int(request.data['maxDist'])
+        user.save()
+        user : DisplayModel= DisplayModel.objects.get(account = user)
+        user.bio = request.data['bio']
+        user.save()
         if serializer.is_valid():
             print("yay")
             serializer.save()
             return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
         else:
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
+@api_view(['POST'])
+def uploadVid(request):
+    print(request.data)
+    user = UserModel.objects.get(userId=request.data['uid'])
+    video = request.FILES['video']
+    serializer = VideoSerializer(data={"user":user.userId, 'video':video, "title":"testing"}, context={'request': request, 'multipart': True})
+    print(serializer.is_valid())
+    serializer.save()
+    return JsonResponse({"test":True})
+from django.http import JsonResponse, FileResponse
+from rest_framework.decorators import api_view
+from .models import UserModel, ImageModel, VideoModel
 
+@api_view(['GET'])
+
+@api_view(['GET'])
+def getVideo(request, uid):
+    from wsgiref.util import FileWrapper
+    user = UserModel.objects.get(userId=uid)
+
+    video = VideoModel.objects.get(user = user)
+    file = FileWrapper(open(video.video.path, 'rb'))
+    response = HttpResponse(file, content_type='video/mp4')
+    response['Content-Disposition'] = 'attachment; filename=my_video.mp4'
+    return response
+def getAllVids(request, uid):
+    try:
+        user = UserModel.objects.get(userId=uid)
+        file_obj = VideoModel.objects.get(user=user)
+        print(file_obj)
+    except VideoModel.DoesNotExist:
+        print("404")
+        return JsonResponse({"success": False, "reason": 'Not found'})
+    
+    # Retrieve the necessary video data
+    video_data = {
+        'video_path': file_obj.video.path,
+        'title': file_obj.title,
+    }
+    print(video_data)
+
+    return FileResponse(open(video_data['video_path'], 'rb'))   
+
+@api_view(['GET'])
+def getFile(request, uid):
+    try:
+        user = UserModel.objects.get(userId=uid)
+        file_obj = ImageModel.objects.get(user=user)
+        print(file_obj)
+    except ImageModel.DoesNotExist:
+        print("404")
+        return JsonResponse({"success": False, "reason": 'Not found'})
+
+    # Open and return the file as a response
+    file = open(file_obj.image.path, 'rb')
+    return FileResponse(file)
 
 @api_view(["GET"])
 def login(request, email, password):

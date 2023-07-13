@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserModel, DisplayModel, ImageModel, hobbiesModel
+from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoModel
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,6 +13,10 @@ class ImageModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageModel
         fields = ['user','image', "isProfilePic"]
+class VideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoModel
+        fields = ["user", 'video', 'title']
 class HobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = hobbiesModel
