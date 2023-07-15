@@ -82,14 +82,13 @@ def uploadVid(request):
     video = request.FILES['video']
     serializer = VideoSerializer(data={"user":user.userId, 'video':video, "title":"testing"}, context={'request': request, 'multipart': True})
     print(serializer.is_valid())
-    serializer.save()
+    instance = serializer.save()
+    makeThumbnail(instance)
     return JsonResponse({"test":True})
-from django.http import JsonResponse, FileResponse
-from rest_framework.decorators import api_view
-from .models import UserModel, ImageModel, VideoModel
 
-@api_view(['GET'])
-
+def makeThumbnail(video:VideoModel):
+    x = Globals.videoAdministration().generate_thumbnail(video.video.path,"test")
+    print(x)
 @api_view(['GET'])
 def getVideo(request, uid):
     from wsgiref.util import FileWrapper
@@ -104,7 +103,7 @@ def getAllVids(request, uid):
     try:
         user = UserModel.objects.get(userId=uid)
         file_obj = VideoModel.objects.get(user=user)
-        print(file_obj)
+        print(file_obj, "this?")
     except VideoModel.DoesNotExist:
         print("404")
         return JsonResponse({"success": False, "reason": 'Not found'})
@@ -114,7 +113,6 @@ def getAllVids(request, uid):
         'video_path': file_obj.video.path,
         'title': file_obj.title,
     }
-    print(video_data)
 
     return FileResponse(open(video_data['video_path'], 'rb'))   
 
@@ -200,13 +198,3 @@ def update_user(user: DisplayModel, location):
     user.longitude = location['longitude']
     user.latitude = location['latitude']
     user.save()
-
-
-@api_view(["GET", "POST"])
-def video_upload(request):
-    # Placeholder, further implementation required
-    return JsonResponse("")
-
-
-def test(request):
-    return JsonResponse({"successful build":True})
