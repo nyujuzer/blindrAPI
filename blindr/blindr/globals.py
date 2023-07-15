@@ -1,5 +1,9 @@
 from enum import Enum
 from datetime import datetime
+from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video import fx
+import os
 
 class Globals:
         class Gender(Enum):
@@ -49,3 +53,16 @@ class Globals:
                 
                 formatted_date = input_date.strftime("%Y-%m-%d")
                 return formatted_date
+        class videoAdministration():
+               
+
+                def generate_thumbnail(self, instance, filename):
+                        from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+                        from moviepy.video.io.VideoFileClip import VideoFileClip
+
+                        def generate_thumbnail(video_path, thumbnail_path):
+                                video = VideoFileClip(video_path)
+                                thumbnail = video.get_frame(2)  # Change the time to get a frame at a different timestamp
+                                thumbnail.save(thumbnail_path)
+
+  

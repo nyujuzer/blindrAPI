@@ -126,8 +126,18 @@ class VideoModel(models.Model):
         __str__(): Returns the string representation of the video.
     """
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='videos')
-    video = models.FileField(upload_to="img/%y")
+    video = models.FileField(upload_to="videos", )
     title = models.CharField(max_length=30)
 
     def __str__(self):
         return self.title
+class ThumbnailModel(models.Model):
+    relatedvideo = models.ForeignKey(VideoModel, on_delete=models.CASCADE, related_name='related_video')
+    thumbnail = models.ImageField(upload_to="thumbnails")
+    def save(self, *args, **kwargs):
+        if not self.thumbnail:
+            video_path = self.relatedvideo.video.path
+            thumbnail_path = f"thumbnails/{self.relatedvideo.title}.jpg"  # Customize the thumbnail filename if needed
+            Globals.videoAdministration().generate_thumbnail(video_path, thumbnail_path)
+            self.thumbnail.name = thumbnail_path
+            super().save(*args, **kwargs)
