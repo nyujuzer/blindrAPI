@@ -131,13 +131,34 @@ class VideoModel(models.Model):
 
     def __str__(self):
         return self.title
+
+
 class ThumbnailModel(models.Model):
+    """
+    Model representing thumbnails for user videos.
+
+    Attributes:
+        relatedvideo (ForeignKey): The associated video.
+        thumbnail (ImageField): The thumbnail image.
+
+    Methods:
+        save(): Overrides the default save() method to generate and save the thumbnail automatically.
+    """
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="user")
     relatedvideo = models.ForeignKey(VideoModel, on_delete=models.CASCADE, related_name='related_video')
     thumbnail = models.ImageField(upload_to="thumbnails")
+
     def save(self, *args, **kwargs):
+        """
+        Overrides the default save() method to generate and save the thumbnail automatically.
+        The thumbnail is generated using the associated video and saved to the 'thumbnails' directory.
+        """
         if not self.thumbnail:
             video_path = self.relatedvideo.video.path
             thumbnail_path = f"thumbnails/{self.relatedvideo.title}.jpg"  # Customize the thumbnail filename if needed
-            Globals.videoAdministration().generate_thumbnail(video_path, thumbnail_path)
+            Globals.generate_thumbnail(video_path, thumbnail_path)  # Assuming there's a method to generate thumbnails
             self.thumbnail.name = thumbnail_path
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Thumbnail for {self.relatedvideo.title}'

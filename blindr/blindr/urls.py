@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from .views import register, login, get_hobbies, get_matches, finishSignUp, getFile, uploadVid, getAllVids
+from .views import register, login, get_hobbies, get_matches, finishSignUp, getFile, uploadVid, getAllVids, getThumbs
 from django.urls import path
 
 urlpatterns = [
@@ -26,6 +26,7 @@ urlpatterns = [
     path('getUsers/', get_matches),
     path('getFile/<str:uid>/', getFile),
     path('uploadVideo/', uploadVid),
+    path('getThumbs/<str:uid>', getThumbs),
     path('videos/<str:uid>', getAllVids),
     #remove after testing
 ]

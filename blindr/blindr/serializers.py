@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoModel
+from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoModel, ThumbnailModel
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,3 +21,6 @@ class HobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = hobbiesModel
         fields = ['id', 'hobby']
+class ThumbnailSerializer(serializers.ModelSerializer):
+    model = ThumbnailModel
+    fields = ['user','relatedvideo', "thumbnail"]

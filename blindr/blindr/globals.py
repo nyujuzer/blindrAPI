@@ -4,6 +4,8 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video import fx
 import os
+from .settings import MEDIA_ROOT, MEDIA_URL
+from pyffmpeg import FFmpeg
 
 class Globals:
         class Gender(Enum):
@@ -53,16 +55,19 @@ class Globals:
                 
                 formatted_date = input_date.strftime("%Y-%m-%d")
                 return formatted_date
-        class videoAdministration():
-               
 
-                def generate_thumbnail(self, instance, filename):
-                        from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-                        from moviepy.video.io.VideoFileClip import VideoFileClip
+        def generate_thumbnail(video_path, video, user):
+                from .models import ThumbnailModel
 
-                        def generate_thumbnail(video_path, thumbnail_path):
-                                video = VideoFileClip(video_path)
-                                thumbnail = video.get_frame(2)  # Change the time to get a frame at a different timestamp
-                                thumbnail.save(thumbnail_path)
+                inf = video_path
+                outf = MEDIA_ROOT + '/thumbnail/test.jpg'
 
-  
+                ff = FFmpeg()
+                try:
+
+                        ff.convert(inf, outf)
+                except:
+                        print("self - error")
+                # Save the thumbnail to the database
+                thumbnail = ThumbnailModel(user=user,thumbnail = outf, relatedvideo=video)
+                thumbnail.save()
