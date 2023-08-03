@@ -60,7 +60,7 @@ class Globals:
                 from .models import ThumbnailModel
 
                 inf = video_path
-                outf = MEDIA_ROOT + '/thumbnail/test.jpg'
+                outf = MEDIA_ROOT + f'/thumbnail/{video.title}.jpg'
 
                 ff = FFmpeg()
                 try:

@@ -1,20 +1,16 @@
 from math import radians, sin, cos, sqrt, atan2
-from django.contrib.gis.measure import Distance
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
-from requests import Response, status_codes
+
+from .utils import calculate_distance
 from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoModel, ThumbnailModel
 from .settings import MEDIA_ROOT, MEDIA_URL
 from .globals import Globals
-import uuid
-from .regHelp import EmailIsAvailable
+from wsgiref.util import FileWrapper
 from rest_framework.request import Request
-from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer
-from django.core.files.storage import FileSystemStorage
-
+from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer, ThumbnailSerializer
 from rest_framework.decorators import api_view
-import hashlib
 from django.contrib.auth.hashers import make_password, check_password
 from os import path
 
@@ -132,14 +128,16 @@ def uploadVid(request: Request) -> JsonResponse:
     """
     user = UserModel.objects.get(userId=request.data['uid'])
     video = request.FILES['video']
-    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": "testing"}, context={'request': request, 'multipart': True})
+    print(len(request.data['title']))
+    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.data['title']}, context={'request': request, 'multipart': True})
     if serializer.is_valid():
         instance = serializer.save()
         print(type(instance))
         makeThumbnail(instance, user)
         return JsonResponse({"success": True})
     else: 
-        print(serializer.errors)
+        if 'title' in serializer.errors.keys():
+            return JsonResponse({'success':False, "reason":"tooShort"})
         return JsonResponse({"success": False})
 
 def makeThumbnail(video: VideoModel, user):
@@ -170,7 +168,6 @@ def getVideo(request: Request, uid: str) -> HttpResponse:
     Returns:
         HttpResponse: HTTP response containing the video file.
     """
-    from wsgiref.util import FileWrapper
     user = UserModel.objects.get(userId=uid)
 
     video = VideoModel.objects.get(user=user)
@@ -207,17 +204,38 @@ def getAllVids(request: Request, uid: str) -> JsonResponse:
         'title': file_obj.title,
     }
 
-    return FileResponse(open(video_data['video_path'], 'rb'))
+    return FileResponse(open(video_data['video_path'], 'rb'))    
 
 @api_view(['GET'])
 def getThumbs(request, uid):
-    user = UserModel.objects.get(userId=uid)
-    print(user)
-    thumbnail = ThumbnailModel.objects.all().filter(user=user)
-    print(thumbnail)
-    return JsonResponse({"testing":True})
+
+
+    # Get the current user from the request (assuming you're using some form of authentication)
+    current_user = UserModel.objects.get(userId=uid)  # Adjust this line based on your authentication method
+
+    # Query ThumbnailModel objects for the current user and select the related Video object
+    thumbnail_list = ThumbnailModel.objects.filter(user=current_user).select_related('relatedvideo').all()
+
+    # Create a list to store the serialized data
+    serialized_list = []
+
+    # Serialize each object to a dictionary and add it to the list
+    for thumbnail in thumbnail_list:
+        serialized_thumbnail = {
+            'title': thumbnail.relatedvideo.title,
+            'video_url': thumbnail.relatedvideo.video.url,
+            'thumbnail_url': thumbnail.thumbnail.url,
+            # Add other fields from ThumbnailModel if needed
+        }
+        serialized_list.append(serialized_thumbnail)
+
+    # Return the serialized list as JSON response
+    print(serialized_list)
+    return JsonResponse(serialized_list, safe=False)
+
+
 @api_view(['GET'])
-def getFile(request: Request, uid: str) -> FileResponse:
+def getProfileData(request: Request, uid: str, ) -> JsonResponse:
     """
     Get the image file for a user.
 
@@ -233,21 +251,86 @@ def getFile(request: Request, uid: str) -> FileResponse:
     try:
         user = UserModel.objects.get(userId=uid)
         file_obj = ImageModel.objects.get(user=user)
-        print(file_obj)
+        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image.url}
     except ImageModel.DoesNotExist:
-        print("404")
-        response = FileResponse()
-        response.status_code = 404
+        response = JsonResponse({"success":False, "reason":"CantFindImage"})
         return response
 
     # Open and return the file as a response
     file = open(file_obj.image.path, 'rb')
     print(file)
-    response = FileResponse(file)
+    response = JsonResponse(returnData)
     response.status_code = 200
     return response
 
+import random
 
+
+@api_view(["GET"])
+def get_random_videos(request, uid, amount, pks:str=''):
+    # Step 1: Retrieve the current user from the request
+    current_user = UserModel.objects.get(userId = uid)
+    current_user_display = DisplayModel.objects.get(account = current_user)
+    pks = pks.split("-")
+    # Step 2: Get the current user's latitude and longitude (if available)
+    user_latitude = None
+    user_longitude = None
+    if current_user_display.latitude and current_user_display.longitude:
+        user_latitude = float(current_user_display.latitude)
+        user_longitude = float(current_user_display.longitude)
+
+    # Step 3: Get the max distance for user preferences (if available)
+    max_distance = current_user.maxdist
+
+    # Step 4: Filter the VideoModel objects associated with the current user
+    videos = VideoModel.objects.exclude(user=current_user)
+    print(videos)
+
+    # Step 5: Randomize the order of the videos
+    randomized_videos = list(videos)
+    random.shuffle(randomized_videos)
+
+    # Step 6: Check if the uploader of each video is within the user's maxdist (if available)
+    nearby_videos = []
+    for video in randomized_videos:
+        uploader = DisplayModel.objects.get(account = video.user)
+        if user_latitude and user_longitude and max_distance:
+            uploader_latitude = float(uploader.latitude)
+            uploader_longitude = float(uploader.longitude)
+            distance = calculate_distance(user_latitude, user_longitude, uploader_latitude, uploader_longitude)
+            if distance <= max_distance and str(video.pk) not in pks and userGenderComp(DisplayModel.objects.all().get(account=video.user), current_user_display):
+                nearby_videos.append(video)
+        else:
+            nearby_videos.append(video)
+
+    # Step 7: Return the list of nearby videos as a JSON response
+    video_list = []
+    for video in nearby_videos:
+        video_info = {
+            'pk':video.pk,
+            'title': video.title,
+            'video_url': video.video.url,
+            # Add any other video information you want to include in the response
+        }
+        video_list.append(video_info)
+    print(video_list[0:amount])
+    return JsonResponse({'videos': video_list[0:amount]})
+def userGenderComp(slave:DisplayModel, master:DisplayModel) ->bool:
+    """
+    goalDef : 
+    To return a boolean if the users are compatible by gender and preferences
+    guidelines:
+        unless preferences are any: only return true if the user preferences and the other user's gender is the same
+        if any, return true anyways
+    """
+    # print(slave, master)
+    ret = False
+    if Globals.Gender.Decode(master.preferences) == "ANY":
+        ret = True
+    elif master.preferences == slave.gender:
+        ret = True
+    # print(ret)
+    return ret
 @api_view(["GET"])
 def login(request: Request, email: str, password: str) -> JsonResponse:
     """
@@ -348,9 +431,18 @@ def get_matches(request: Request) -> JsonResponse:
             matches.append(matches)
 
     return JsonResponse({'matches': matches})
-
-
-def update_user(user: DisplayModel, location: dict):
+@api_view(['POST'])
+def setLike(request):
+    pk = request.data['video']
+    print(pk)
+    video = VideoModel.objects.get(pk = int(pk))
+    liked_user = DisplayModel.objects.get(account = video.user)
+    liking_user = UserModel.objects.get(userId = request.data['uid'])
+    liking_user.currentLikes.add(liked_user)
+    return JsonResponse({'test':True})
+@csrf_exempt
+@api_view(['POST'])
+def update_user(request):
     """
     Update the user's location.
 
@@ -360,6 +452,11 @@ def update_user(user: DisplayModel, location: dict):
         user (DisplayModel): The user's display model object.
         location (dict): Dictionary containing the user's location coordinates.
     """
+    uid = request.data['uid']
+    print(request.data)
+    user = DisplayModel.objects.filter(account=UserModel.objects.get(userId=uid))[0]
+    location = request.data['location']
     user.longitude = location['longitude']
     user.latitude = location['latitude']
     user.save()
+    return JsonResponse({"Success":True})

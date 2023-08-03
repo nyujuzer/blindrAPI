@@ -4,7 +4,7 @@ from .models import UserModel, DisplayModel, ImageModel, hobbiesModel, VideoMode
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
-        fields = [ 'name', 'password', 'email']
+        fields = [ 'name', 'password', 'email', 'currentLikes']
 class displaySerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplayModel

@@ -14,8 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from .views import register, login, get_hobbies, get_matches, finishSignUp, getFile, uploadVid, getAllVids, getThumbs
+from .views import register, login, get_hobbies, get_matches, finishSignUp, getProfileData, uploadVid, getAllVids, getThumbs, update_user, get_random_videos, setLike
 from django.urls import path
+from .settings import DEBUG, MEDIA_ROOT, MEDIA_URL
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,9 +27,14 @@ urlpatterns = [
     path('finishSignup/', finishSignUp),
     path('getHobbies/', get_hobbies),
     path('getUsers/', get_matches),
-    path('getFile/<str:uid>/', getFile),
+    path('getProfileData/<str:uid>/', getProfileData),
     path('uploadVideo/', uploadVid),
     path('getThumbs/<str:uid>', getThumbs),
     path('videos/<str:uid>', getAllVids),
-    #remove after testing
+    path('updateLocation/', update_user),
+    path('getRandomVideos/<str:uid>/<int:amount>/<str:pks>', get_random_videos),
+    path('getRandomVideos/<str:uid>/<int:amount>/', get_random_videos),
+    path('setLikes/', setLike)
 ]
+if DEBUG:
+    urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
