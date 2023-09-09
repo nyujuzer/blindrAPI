@@ -1,6 +1,8 @@
 import requests
 
 class NativeNotifyAPI:
+    '''
+    '''
     def __init__(self, appid, apptoken) -> None:
         self.app_id = appid
         self.app_token = apptoken
