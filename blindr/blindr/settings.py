@@ -35,6 +35,8 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'blindr',
+    # 'chat',
+    'daphne',    
 
     'corsheaders',
     'django.contrib.admin',
@@ -80,6 +82,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'blindr.wsgi.application'
+ASGI_APPLICATION = 'blindr.asgi.application'
+CHANNEL_LAYERS = {
+    'default':{
+        'BACKEND':'channels.layers.InMemoryChannelLayer',
+    }
+}
 
 
 # Database
