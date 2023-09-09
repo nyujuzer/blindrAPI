@@ -78,21 +78,33 @@ class DisplayModel(models.Model):
 
 
 class MatchesModel(models.Model):
-    """
-    Model representing user matches.
+    user_1 = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="one")
+    user_2 = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="two")
+    def __str__(self):
+        return f'match of {self.user_1} and {self.user_2}'
 
-    Attributes:
-        accountId (OneToOneField): The associated user account.
-        matchesId (UUIDField): The unique identifier for the matches.
-        matches (str): A string representing the matches.
-        dislikes (str): A string representing the dislikes.
-        likes (str): A string representing the likes.
-    """
-    accountId = models.OneToOneField(UserModel, on_delete=models.CASCADE)
-    matchesId = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    matches = models.CharField(max_length=2000)
-    dislikes = models.CharField(max_length=20000)
-    likes = models.CharField(max_length=20000)
+class Message(models.Model):
+    match = models.ForeignKey(MatchesModel, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    def to_gifted_chat_message(self):
+        """
+        Converts the Django Message model to Gifted Chat's message format.
+        """
+        return {
+            '_id': self.id,
+            'text': self.content,
+            'createdAt': self.timestamp.isoformat(),  # Convert datetime to string
+            'user': {
+                '_id': str(self.sender.userId),
+                'name': self.sender.name,
+            },
+        }
+
+    def __str__(self):
+        return f'{self.sender} to {self.match}'
 
 
 class ImageModel(models.Model):
