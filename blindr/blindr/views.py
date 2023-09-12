@@ -1,4 +1,5 @@
 from math import radians, sin, cos, sqrt, atan2
+from time import sleep
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
@@ -133,9 +134,9 @@ def uploadVid(request) -> JsonResponse:
     serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.data['title']}, context={'request': request, 'multipart': True})
     if serializer.is_valid():
         instance = serializer.save()
-        print(type(instance))
         makeThumbnail(instance, user)
-        
+        print("Waiting")
+
         return JsonResponse({"success": True})
     else: 
         if 'title' in serializer.errors.keys():
