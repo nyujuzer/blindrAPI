@@ -13,7 +13,7 @@
     ],
     "functions": {
       "blindr/**/*.py": {
-        "excludeFiles": "meia/**"
+        "excludeFiles": "media/**"
       }
     }
 }
