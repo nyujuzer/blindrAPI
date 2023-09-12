@@ -13,7 +13,7 @@
     ],
     "functions": {
       "api/**/*.py": {
-        "excludeFiles": "media/**"
+        "excludeFiles": "meia/**"
       }
     }
 }
