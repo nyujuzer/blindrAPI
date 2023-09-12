@@ -25,3 +25,9 @@ def EmailIsAvailable(_email):
     else:
         return False
     
+class stream():
+    def __init__(self) -> None:
+        self.requests = []
+    def acc_subscriber(self, request):
+        self.requests.append(request)
+    

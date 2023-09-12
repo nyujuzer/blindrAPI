@@ -35,6 +35,8 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'blindr',
+    # 'chat',
+    'daphne',    
 
     'corsheaders',
     'django.contrib.admin',
@@ -80,6 +82,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'blindr.wsgi.application'
+ASGI_APPLICATION = 'blindr.asgi.application'
+CHANNEL_LAYERS = {
+    'default':{
+        'BACKEND':'channels.layers.InMemoryChannelLayer',
+    }
+}
 
 
 # Database
@@ -87,11 +95,15 @@ WSGI_APPLICATION = 'blindr.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'URL': 'postgresql://postgres:ifHjgq31sKJwPWrWdHDp@containers-us-west-179.railway.app:6592/railway',
+        'NAME': 'railway',
+        'USER': 'postgres',
+        'PASSWORD': 'ifHjgq31sKJwPWrWdHDp',
+        'HOST': 'containers-us-west-179.railway.app',
+        'PORT': 6592,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
