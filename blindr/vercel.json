@@ -1,14 +1,13 @@
 {
-    "builds": [
-      {
-        "src": "blindr/wsgi.py",
-        "use": "@vercel/python"
-      }
-    ],
     "routes": [
       {
         "src": "/(.*)",
         "dest": "blindr/wsgi.py"
       }
-    ]
+    ],
+    "functions": {
+      "blindr/**/*.py": {
+        "excludeFiles": "media/**"
+      }
+    }
 }
