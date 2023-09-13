@@ -10,10 +10,5 @@
         "src": "/(.*)",
         "dest": "blindr/wsgi.py"
       }
-    ],
-    "functions": {
-      "blindr/**/*.py": {
-        "excludeFiles": "media/**"
-      }
-    }
+    ]
 }
