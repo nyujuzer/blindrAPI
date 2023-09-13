@@ -336,6 +336,9 @@ def userGenderComp(slave:DisplayModel, master:DisplayModel) ->bool:
     return ret
 @api_view(["GET"])
 def login(request, email: str, password: str) -> JsonResponse:
+    import lzma
+    from importlib.metadata import version
+    print(version('lzma'))
     """
     User login.
 
