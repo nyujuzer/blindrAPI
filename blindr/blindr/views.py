@@ -111,6 +111,7 @@ def finishSignUp(request) -> JsonResponse:
             serializer.save()
             return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
         else:
+            print(serializer.errors)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
 
