@@ -1,11 +1,11 @@
 from enum import Enum
 from datetime import datetime
-from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.video import fx
-import os
-from .settings import MEDIA_ROOT, MEDIA_URL
-from pyffmpeg import FFmpeg
+# from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+# from moviepy.video.io.VideoFileClip import VideoFileClip
+# from moviepy.video import fx
+# import os
+# from .settings import MEDIA_ROOT, MEDIA_URL
+# from pyffmpeg import FFmpeg
 
 class Globals:
         class Gender(Enum):
