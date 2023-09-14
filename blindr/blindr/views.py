@@ -134,7 +134,7 @@ def uploadVid(request) -> JsonResponse:
     serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.data['title']}, context={'request': request, 'multipart': True})
     if serializer.is_valid():
         instance = serializer.save()
-        makeThumbnail(instance, user)
+       # makeThumbnail(instance, user)
         print("Waiting")
 
         return JsonResponse({"success": True})
@@ -195,19 +195,27 @@ def getAllVids(request, uid: str) -> JsonResponse:
     """
     try:
         user = UserModel.objects.get(userId=uid)
-        file_obj = VideoModel.objects.get(user=user)
-        print(file_obj, "this?")
+        file_obj = VideoModel.objects.all().filter(user=user)
     except VideoModel.DoesNotExist:
         print(print(VideoModel.DoesNotExist))
         return JsonResponse({"success": False, "reason": 'Not found'})
 
+    retlist = []
     # Retrieve the necessary video data
-    video_data = {
-        'video_path': file_obj.video.path,
-        'title': file_obj.title,
-    }
+    for video in file_obj:
 
-    return FileResponse(open(video_data['video_path'], 'rb'))    
+        video_data = {
+            'title': video.title,
+            'video_url': video.video.url,
+            'pk': video.pk
+        }
+        retlist.append(video_data)
+    """    title:string,
+    video_url:string,
+    pk:string,
+    thumbnail_url?:string,"""
+    print(video_data)
+    return JsonResponse(retlist, safe=False)    
 
 @api_view(['GET'])
 def getThumbs(request, uid):
@@ -336,9 +344,9 @@ def userGenderComp(slave:DisplayModel, master:DisplayModel) ->bool:
     return ret
 @api_view(["GET"])
 def login(request, email: str, password: str) -> JsonResponse:
-    import lzma
-    from importlib.metadata import version
-    print(version('lzma'))
+    # import lzma
+    # from importlib.metadata import version
+    # print(version('lzma'))
     """
     User login.
 

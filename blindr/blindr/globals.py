@@ -56,18 +56,18 @@ class Globals:
                 formatted_date = input_date.strftime("%Y-%m-%d")
                 return formatted_date
 
-        def generate_thumbnail(video_path, video, user):
-                from .models import ThumbnailModel
+        # def generate_thumbnail(video_path, video, user):
+        #         from .models import ThumbnailModel
 
-                inf = video_path
-                outf = MEDIA_ROOT + f'/thumbnail/{video.title}.jpg'
+        #         inf = video_path
+        #         outf = MEDIA_ROOT + f'/thumbnail/{video.title}.jpg'
 
-                ff = FFmpeg()
-                try:
+        #         ff = FFmpeg()
+        #         try:
 
-                        ff.convert(inf, outf)
-                except:
-                        print("self - error")
-                # Save the thumbnail to the database
-                thumbnail = ThumbnailModel(user=user,thumbnail = outf, relatedvideo=video)
-                thumbnail.save()
+        #                 ff.convert(inf, outf)
+        #         except:
+        #                 print("self - error")
+        #         # Save the thumbnail to the database
+        #         thumbnail = ThumbnailModel(user=user,thumbnail = outf, relatedvideo=video)
+        #         thumbnail.save()
