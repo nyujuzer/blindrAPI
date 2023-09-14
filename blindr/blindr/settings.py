@@ -16,8 +16,6 @@ from os import path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MEDIA_URL = '/media/'
-MEDIA_ROOT = path.join(BASE_DIR, 'media')
 
 
 # Quick-start development settings - unsuitable for production
@@ -142,6 +140,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = path.join(BASE_DIR, 'static'),
 STATIC_ROOT = path.join(BASE_DIR, 'staticfiles_build', 'static')
+MEDIA_URL = path.join(STATIC_URL,'media/')
+MEDIA_ROOT = path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
