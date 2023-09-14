@@ -101,7 +101,6 @@ def finishSignUp(request) -> JsonResponse:
     """
     if request.method == 'POST':
         user: UserModel = UserModel.objects.get(userId=request.data['uid'])
-        print(request.FILES.get('image'))
         serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
         user.maxdist = int(request.data['maxDist'])
         user.save()
@@ -112,7 +111,7 @@ def finishSignUp(request) -> JsonResponse:
             serializer.save()
             return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
         else:
-            print(serializer.errors)
+            print(serializer.image)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
 
