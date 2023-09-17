@@ -14,6 +14,7 @@ from.serializers import UserSerializer, displaySerializer, ImageModelSerializer,
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password, check_password
 from os import path
+import cloudinary
 
 stream = stream()
 
@@ -84,6 +85,8 @@ def register(request) -> JsonResponse:
     return JsonResponse({"success": False, "error": "all"})
 
 
+def upload(file, **options):
+    cloudinary.uploader.upload("my_image.jpg")
 @csrf_exempt
 @api_view(['POST'])
 def finishSignUp(request) -> JsonResponse:
@@ -100,8 +103,12 @@ def finishSignUp(request) -> JsonResponse:
         JsonResponse: JSON response indicating the success status of the sign-up process.
     """
     if request.method == 'POST':
+        userId=request.data['uid']
         user: UserModel = UserModel.objects.get(userId=request.data['uid'])
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image':uploadToCdn(request.FILES.get("image"), userId), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        
+
+        
         user.maxdist = int(request.data['maxDist'])
         user.save()
         user: DisplayModel = DisplayModel.objects.get(account=user)
@@ -111,9 +118,32 @@ def finishSignUp(request) -> JsonResponse:
             serializer.save()
             return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
         else:
-            print(request.FILES)
+            # print(request.FILES)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
+def uploadToCdn(img, uid):
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+
+    """
+    f4709202-9d95-46a7-b266-cb0db25abcf1/profilepic/f4709202-9d95-46a7-b266-cb0db25abcf1.jpg-f4709202-9d95-46a7-b266-cb0db25abcf1
+    """
+    CLOUDINARY_URL="cloudinary://698476445837844:1frMkxQ6GisX3lE3GXtPqYhUgPI@dqip2ndrs"
+    cloudinary.config( 
+        cloud_name = "dqip2ndrs", 
+        api_key = "698476445837844", 
+        api_secret = "1frMkxQ6GisX3lE3GXtPqYhUgPI",
+        tags=['hello', "world"],
+        secure = True
+        )
+    img_name=img.name.strip(".jpg")
+    cloudinary.uploader.upload(img,
+                               folder=f"{uid}/profilepic",
+                               public_id=f"{img_name}",
+                               overwrite=True,
+                               resource_type="image")
+    return f"{uid}/profilepic/{img_name}"
 
 @api_view(['POST'])
 def uploadVid(request) -> JsonResponse:
@@ -215,7 +245,6 @@ def getAllVids(request, uid: str) -> JsonResponse:
     video_url:string,
     pk:string,
     thumbnail_url?:string,"""
-    print(video_data)
     return JsonResponse(retlist, safe=False)    
 
 @api_view(['GET'])
@@ -263,14 +292,12 @@ def getProfileData(request, uid: str, ) -> JsonResponse:
     try:
         user = UserModel.objects.get(userId=uid)
         file_obj = ImageModel.objects.get(user=user)
-        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image.url}
+        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image}
     except ImageModel.DoesNotExist:
         response = JsonResponse({"success":False, "reason":"CantFindImage"})
         return response
 
     # Open and return the file as a response
-    file = open(file_obj.image.path, 'rb')
-    print(file)
     response = JsonResponse(returnData)
     response.status_code = 200
     return response
@@ -499,7 +526,7 @@ def getLikes(request, userId):
             print(user, "u1", match.user_1)
         data ={
             "id":image.user.userId,
-                "pfpurl":image.image.url,
+                "pfpurl":image.image,
     "profileName":image.user.name,
     "lastText":Message.objects.filter(match=match).last().content if Message.objects.filter(match=match).last() else None
         }
@@ -519,3 +546,7 @@ def getMessages(request, userId, otherid):
 
 def testNotif(request):
     return(JsonResponse({"hekki":True}))
+
+def getVidsWithFire(request):
+    import cloudinary
+    

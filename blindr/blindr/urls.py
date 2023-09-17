@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from .views import register, login, finishSignUp, get_hobbies, get_matches, getProfileData, testNotif, uploadVid, getThumbs, getAllVids, update_user, get_random_videos, setLike, getLikes, getMessages
+from .views import register, login, getVidsWithFire, finishSignUp, get_hobbies, get_matches, getProfileData, testNotif, uploadVid, getThumbs, getAllVids, update_user, get_random_videos, setLike, getLikes, getMessages
 from django.urls import path
 from django.conf import settings
 from chat.routing import websocket_urlpatterns
@@ -41,6 +41,9 @@ path('getRandomVideos/<str:uid>/<int:amount>/<str:pks>', get_random_videos),
 path('getRandomVideos/<str:uid>/<int:amount>/', get_random_videos),
 path('setLikes/', setLike),
 path('getLikes/<str:userId>/', getLikes),
+
+path('test', getVidsWithFire),
+
 path('getMessages/<str:userId>/<str:otherid>/', getMessages),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+websocket_urlpatterns
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
