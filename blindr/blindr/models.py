@@ -121,10 +121,10 @@ class ImageModel(models.Model):
     """
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='images')
     isProfilePic = models.BooleanField()
-    image = models.ImageField(upload_to="img")
+    image = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.image.name} - {self.user.name}'
+        return f'{self.image} - {self.user.name}'
 
 
 class VideoModel(models.Model):
