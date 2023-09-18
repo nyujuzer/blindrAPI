@@ -94,12 +94,6 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'URL': 'postgresql://postgres:ifHjgq31sKJwPWrWdHDp@containers-us-west-179.railway.app:6592/railway',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'ifHjgq31sKJwPWrWdHDp',
-        'HOST': 'containers-us-west-179.railway.app',
-        'PORT': 6592,
     }
 }
 
