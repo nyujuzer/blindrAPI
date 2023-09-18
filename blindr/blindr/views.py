@@ -526,7 +526,7 @@ def getLikes(request, userId):
             print(user, "u1", match.user_1)
         data ={
             "id":image.user.userId,
-                "pfpurl":image.image,
+                "pfpurl":image.image.url,
     "profileName":image.user.name,
     "lastText":Message.objects.filter(match=match).last().content if Message.objects.filter(match=match).last() else None
         }
