@@ -105,11 +105,7 @@ def finishSignUp(request) -> JsonResponse:
     if request.method == 'POST':
         userId=request.data['uid']
         user: UserModel = UserModel.objects.get(userId=request.data['uid'])
-<<<<<<< HEAD
         serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
-=======
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image':uploadToCdn(request.FILES.get("image"), userId), 'isProfilePic': True}, context={'request': request, 'multipart': True})
->>>>>>> 68bf60f03b74a8a4078bc631ea0b27ee697b8e75
         
 
         
@@ -125,7 +121,6 @@ def finishSignUp(request) -> JsonResponse:
             # print(request.FILES)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
-<<<<<<< HEAD
 # def uploadToCdn(img, uid):
 #     import cloudinary
 #     import cloudinary.uploader
@@ -151,33 +146,6 @@ def finishSignUp(request) -> JsonResponse:
 #     return f"{uid}/profilepic/{img_name}"
 
 # @api_view(['POST'])
-=======
-def uploadToCdn(img, uid):
-    import cloudinary
-    import cloudinary.uploader
-    import cloudinary.api
-
-    """
-    f4709202-9d95-46a7-b266-cb0db25abcf1/profilepic/f4709202-9d95-46a7-b266-cb0db25abcf1.jpg-f4709202-9d95-46a7-b266-cb0db25abcf1
-    """
-    CLOUDINARY_URL="cloudinary://698476445837844:1frMkxQ6GisX3lE3GXtPqYhUgPI@dqip2ndrs"
-    cloudinary.config( 
-        cloud_name = "dqip2ndrs", 
-        api_key = "698476445837844", 
-        api_secret = "1frMkxQ6GisX3lE3GXtPqYhUgPI",
-        tags=['hello', "world"],
-        secure = True
-        )
-    img_name=img.name.strip(".jpg")
-    cloudinary.uploader.upload(img,
-                               folder=f"{uid}/profilepic",
-                               public_id=f"{img_name}",
-                               overwrite=True,
-                               resource_type="image")
-    return f"{uid}/profilepic/{img_name}"
-
-@api_view(['POST'])
->>>>>>> 68bf60f03b74a8a4078bc631ea0b27ee697b8e75
 def uploadVid(request) -> JsonResponse:
     """
     Upload a video for a user.
