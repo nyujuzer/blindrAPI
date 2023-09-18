@@ -121,7 +121,12 @@ class ImageModel(models.Model):
     """
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='images')
     isProfilePic = models.BooleanField()
+<<<<<<< HEAD
     image = models.ImageField(upload_to="img")
+=======
+    image = models.CharField(max_length=255)
+
+>>>>>>> 68bf60f03b74a8a4078bc631ea0b27ee697b8e75
     def __str__(self):
         return f'{self.image} - {self.user.name}'
 
