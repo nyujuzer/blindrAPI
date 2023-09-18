@@ -292,7 +292,7 @@ def getProfileData(request, uid: str, ) -> JsonResponse:
     try:
         user = UserModel.objects.get(userId=uid)
         file_obj = ImageModel.objects.get(user=user)
-        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image}
+        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image.url}
     except ImageModel.DoesNotExist:
         response = JsonResponse({"success":False, "reason":"CantFindImage"})
         return response
