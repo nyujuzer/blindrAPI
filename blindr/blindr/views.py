@@ -145,7 +145,8 @@ def finishSignUp(request) -> JsonResponse:
 #                                resource_type="image")
 #     return f"{uid}/profilepic/{img_name}"
 
-# @api_view(['POST'])
+@api_view(['POST'])
+@csrf_exempt
 def uploadVid(request) -> JsonResponse:
     """
     Upload a video for a user.
