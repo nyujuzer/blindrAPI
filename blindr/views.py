@@ -5,19 +5,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
 from django.db.models import Q
-from .blindr.utils import calculate_distance
+from .utils import calculate_distance
 from .models import UserModel, DisplayModel, ImageModel, Message,hobbiesModel, VideoModel, ThumbnailModel, MatchesModel
 from .settings import MEDIA_ROOT, MEDIA_URL
-from .blindr.globals import Globals
+from .globals import Globals
 from wsgiref.util import FileWrapper
-from .blindr.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer, ThumbnailSerializer
+from .serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer, ThumbnailSerializer
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password, check_password
 from os import path, remove
 from .comp import compress
 import cloudinary
-
-stream = stream()
 
 def is_email_in_use(email: str) -> bool:
     """
