@@ -1,19 +1,32 @@
 from math import radians, sin, cos, sqrt, atan2
 from time import sleep
+from django.db.models import FileField
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
-from .utils import stream
 from django.db.models import Q
-from .utils import calculate_distance
+from blindr.utils import calculate_distance
 from .models import UserModel, DisplayModel, ImageModel, Message,hobbiesModel, VideoModel, ThumbnailModel, MatchesModel
 from .settings import MEDIA_ROOT, MEDIA_URL
-from .globals import Globals
+from blindr.globals import Globals
+from asgiref.sync import sync_to_async
 from wsgiref.util import FileWrapper
-from.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer, ThumbnailSerializer
+from blindr.serializers import UserSerializer, displaySerializer, ImageModelSerializer, VideoSerializer, ThumbnailSerializer
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password, check_password
-stream = stream()
+from os import path, remove
+from .comp import compress
+from background_task import background
+import cloudinary
+import asyncio
+import zipfile
+def compressVideo(file, filename, instanceId, userId, title):
+    user = UserModel.objects.get(userId = userId)
+    instance = VideoModel.objects.get(pk = instanceId)
+    instance.save()
+    compress(file, filename)
+    makeThumbnail(instance, user, title=title)
+    return
 
 def is_email_in_use(email: str) -> bool:
     """
@@ -100,9 +113,6 @@ def finishSignUp(request) -> JsonResponse:
         userId=request.data['uid']
         user: UserModel = UserModel.objects.get(userId=userId)
         serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
-        
-
-        
         user.maxdist = int(request.data['maxDist'])
         user.save()
         user: DisplayModel = DisplayModel.objects.get(account=user)
@@ -129,22 +139,26 @@ def uploadVid(request) -> JsonResponse:
     Returns:
         JsonResponse: JSON response indicating the success status of the video upload.
     """
-    user = UserModel.objects.get(userId=request.data['uid'])
+    user = UserModel.objects.get(userId=request.POST.get('uid'))
+    print(request.FILES)
+    print(request.headers)
     video = request.FILES['video']
-    print(len(request.data['title']))
-    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.data['title']}, context={'request': request, 'multipart': True})
+    print(type(request.FILES['video']))
+    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get('title')}, context={'request': request, 'multipart': True})
+    
     if serializer.is_valid():
         instance = serializer.save()
-       # makeThumbnail(instance, user)
-        print("Waiting")
-
+        # compressVideo(instance.video.path, request.POST.get('title'), instance.pk, str(user.userId), request.POST.get('title')) # Await the async function
         return JsonResponse({"success": True})
-    else: 
+    else:
         if 'title' in serializer.errors.keys():
-            return JsonResponse({'success':False, "reason":"tooShort"})
+            return JsonResponse({'success': False, "reason": "tooShort"})
         return JsonResponse({"success": False})
 
-def makeThumbnail(video: VideoModel, user):
+def deleteFile(title:str):
+    remove((f"{MEDIA_ROOT}/videos/{title}.mp4"))
+
+def makeThumbnail(video: VideoModel, user:UserModel, title):
     """
     Create a thumbnail for a video.
 
@@ -154,8 +168,7 @@ def makeThumbnail(video: VideoModel, user):
     Args:
         video (VideoModel): The video model object for which the thumbnail is being generated.
     """
-    print(video.video)
-    x = Globals.generate_thumbnail(video.video.path , video, user)
+    Globals.generate_thumbnail(video_path = f'{MEDIA_ROOT}/{video.video}' ,video=video, title=title, user=user)
 
 
 @api_view(['GET'])

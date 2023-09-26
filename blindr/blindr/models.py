@@ -139,7 +139,7 @@ class VideoModel(models.Model):
         __str__(): Returns the string representation of the video.
     """
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='videos')
-    video = models.FileField(upload_to="videos", )
+    video = models.FileField(upload_to="videos")
     title = models.CharField(max_length=100)
 
     def __str__(self):

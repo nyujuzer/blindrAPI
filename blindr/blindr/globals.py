@@ -1,5 +1,9 @@
 from enum import Enum
 from datetime import datetime
+from background_task import background
+from moviepy.editor import VideoFileClip
+from .settings import MEDIA_ROOT
+from os import path, mkdir
 # from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 # from moviepy.video.io.VideoFileClip import VideoFileClip
 # from moviepy.video import fx
@@ -56,18 +60,24 @@ class Globals:
                 formatted_date = input_date.strftime("%Y-%m-%d")
                 return formatted_date
 
-        # def generate_thumbnail(video_path, video, user):
-        #         from .models import ThumbnailModel
+        #@background(schedule=200)
+        def generate_thumbnail(video_path, title, user, video):
+                from .models import ThumbnailModel
 
-        #         inf = video_path
-        #         outf = MEDIA_ROOT + f'/thumbnail/{video.title}.jpg'
+                # Load the video clip
+                clip = VideoFileClip(video_path)
+                clip = clip.subclip(0,2)
+                # Set the time (in seconds) for the thumbnail
+                thumbnail_time = 1
 
-        #         ff = FFmpeg()
-        #         try:
+                # Save the thumbnail as an image file
+                outf = MEDIA_ROOT + f'/thumbnail/{title}.jpg'  # Replace with your desired file path and name
+                directory_path = path.join(MEDIA_ROOT, 'thumbnail/')
+                if path.exists(directory_path) == False and path.isdir(directory_path) ==False:
+                        mkdir(directory_path)
+                # Generate the thumbnail by selecting a frame at the specified time
+                thumbnail_frame = clip.save_frame(outf,t=thumbnail_time)
 
-        #                 ff.convert(inf, outf)
-        #         except:
-        #                 print("self - error")
-        #         # Save the thumbnail to the database
-        #         thumbnail = ThumbnailModel(user=user,thumbnail = outf, relatedvideo=video)
-        #         thumbnail.save()
+                # Save the thumbnail path to the database
+                thumbnail = ThumbnailModel(user=user, thumbnail=outf, relatedvideo=video)
+                thumbnail.save()

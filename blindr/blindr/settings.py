@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'daphne',    
 
     'corsheaders',
+'background_task',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,12 +46,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_METHODS = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
+
 MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -132,11 +135,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/static/'
-STATICFILES_DIRS = path.join(BASE_DIR, 'static'),
-STATIC_ROOT = path.join(BASE_DIR, 'staticfiles_build', 'static')
-MEDIA_URL = 'static/media/'
-MEDIA_ROOT = path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+STATIC_ROOT = '/static/'
+STATIC_URL = '/static/'
+MEDIA_ROOT = path.join(BASE_DIR, 'media/')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
