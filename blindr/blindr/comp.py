@@ -1,4 +1,3 @@
-from background_task import background
 from moviepy.editor import VideoFileClip
 from .settings import MEDIA_ROOT
 from asgiref.sync import sync_to_async, async_to_sync

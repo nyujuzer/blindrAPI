@@ -1,6 +1,5 @@
 from enum import Enum
 from datetime import datetime
-from background_task import background
 from moviepy.editor import VideoFileClip
 from .settings import MEDIA_ROOT
 from os import path, mkdir
@@ -60,7 +59,6 @@ class Globals:
                 formatted_date = input_date.strftime("%Y-%m-%d")
                 return formatted_date
 
-        #@background(schedule=200)
         def generate_thumbnail(video_path, title, user, video):
                 from .models import ThumbnailModel
 

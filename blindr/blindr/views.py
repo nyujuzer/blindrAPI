@@ -16,7 +16,6 @@ from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password, check_password
 from os import path, remove
 from .comp import compress
-from background_task import background
 import cloudinary
 import asyncio
 import zipfile
