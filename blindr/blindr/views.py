@@ -113,6 +113,7 @@ def finishSignUp(request) -> JsonResponse:
         user: UserModel = UserModel.objects.get(userId=userId)
         serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
         user.maxdist = int(request.data['maxDist'])
+        user.maxAge = int(request.data['maxAge'])
         user.save()
         user: DisplayModel = DisplayModel.objects.get(account=user)
         user.bio = request.data['bio']
