@@ -30,6 +30,7 @@ class UserModel(models.Model):
         email (EmailField): The email address of the user.
         maxdist (IntegerField): The maximum distance for user preferences (nullable).
         maxAge (IntegerField): The maximum distance for user preferences (nullable).
+
         
     Methods:
         __str__(): Returns the string representation of the user.
