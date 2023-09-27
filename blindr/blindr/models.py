@@ -29,7 +29,9 @@ class UserModel(models.Model):
         name (str): The name of the user.
         email (EmailField): The email address of the user.
         maxdist (IntegerField): The maximum distance for user preferences (nullable).
+        maxAge (IntegerField): The maximum distance for user preferences (nullable).
 
+        
     Methods:
         __str__(): Returns the string representation of the user.
     """
@@ -38,6 +40,7 @@ class UserModel(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
     maxdist = models.IntegerField(null=True, blank=True)
+    maxAge = models.IntegerField(null=True, blank=True)
     currentLikes = models.ManyToManyField('DisplayModel', blank=True)
 
 
