@@ -1,3 +1,4 @@
+import random
 from math import radians, sin, cos, sqrt, atan2
 from time import sleep
 from django.db.models import FileField
@@ -6,7 +7,7 @@ from django.http import JsonResponse, FileResponse, HttpResponse
 from django.shortcuts import render
 from django.db.models import Q
 from blindr.utils import calculate_distance
-from .models import UserModel, DisplayModel, ImageModel, Message,hobbiesModel, VideoModel, ThumbnailModel, MatchesModel
+from .models import UserModel, DisplayModel, ImageModel, Message, hobbiesModel, VideoModel, ThumbnailModel, MatchesModel
 from .settings import MEDIA_ROOT, MEDIA_URL
 from blindr.globals import Globals
 from asgiref.sync import sync_to_async
@@ -19,13 +20,16 @@ from .comp import compress
 import cloudinary
 import asyncio
 import zipfile
+
+
 def compressVideo(file, filename, instanceId, userId, title):
-    user = UserModel.objects.get(userId = userId)
-    instance = VideoModel.objects.get(pk = instanceId)
+    user = UserModel.objects.get(userId=userId)
+    instance = VideoModel.objects.get(pk=instanceId)
     instance.save()
     compress(file, filename)
     makeThumbnail(instance, user, title=title)
     return
+
 
 def is_email_in_use(email: str) -> bool:
     """
@@ -93,6 +97,7 @@ def register(request) -> JsonResponse:
 
     return JsonResponse({"success": False, "error": "all"})
 
+
 @csrf_exempt
 @api_view(['POST'])
 def finishSignUp(request) -> JsonResponse:
@@ -109,9 +114,10 @@ def finishSignUp(request) -> JsonResponse:
         JsonResponse: JSON response indicating the success status of the sign-up process.
     """
     if request.method == 'POST':
-        userId=request.data['uid']
+        userId = request.data['uid']
         user: UserModel = UserModel.objects.get(userId=userId)
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get("image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get(
+            "image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
         user.maxdist = int(request.data['maxDist'])
         user.maxAge = int(request.data['maxAge'])
         user.save()
@@ -124,8 +130,9 @@ def finishSignUp(request) -> JsonResponse:
         else:
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
+
 @api_view(['POST'])
-@csrf_exempt 
+@csrf_exempt
 def uploadVid(request) -> JsonResponse:
     """
     Upload a video for a user.
@@ -144,8 +151,9 @@ def uploadVid(request) -> JsonResponse:
     print(request.headers)
     video = request.FILES['video']
     print(type(request.FILES['video']))
-    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get('title'), 'description':request.POST.get('description')}, context={'request': request, 'multipart': True})
-    
+    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get(
+        'title'), 'description': request.POST.get('description')}, context={'request': request, 'multipart': True})
+
     if serializer.is_valid():
         instance = serializer.save()
         # compressVideo(instance.video.path, request.POST.get('title'), instance.pk, str(user.userId), request.POST.get('title')) # Await the async function
@@ -155,10 +163,12 @@ def uploadVid(request) -> JsonResponse:
             return JsonResponse({'success': False, "reason": "tooShort"})
         return JsonResponse({"success": False})
 
-def deleteFile(title:str):
+
+def deleteFile(title: str):
     remove((f"{MEDIA_ROOT}/videos/{title}.mp4"))
 
-def makeThumbnail(video: VideoModel, user:UserModel, title):
+
+def makeThumbnail(video: VideoModel, user: UserModel, title):
     """
     Create a thumbnail for a video.
 
@@ -168,7 +178,8 @@ def makeThumbnail(video: VideoModel, user:UserModel, title):
     Args:
         video (VideoModel): The video model object for which the thumbnail is being generated.
     """
-    Globals.generate_thumbnail(video_path = f'{MEDIA_ROOT}/{video.video}' ,video=video, title=title, user=user)
+    Globals.generate_thumbnail(
+        video_path=f'{MEDIA_ROOT}/{video.video}', video=video, title=title, user=user)
 
 
 @api_view(['GET'])
@@ -228,17 +239,19 @@ def getAllVids(request, uid: str) -> JsonResponse:
     video_url:string,
     pk:string,
     thumbnail_url?:string,"""
-    return JsonResponse(retlist, safe=False)    
+    return JsonResponse(retlist, safe=False)
+
 
 @api_view(['GET'])
 def getThumbs(request, uid):
 
-
     # Get the current user from the request (assuming you're using some form of authentication)
-    current_user = UserModel.objects.get(userId=uid)  # Adjust this line based on your authentication method
+    # Adjust this line based on your authentication method
+    current_user = UserModel.objects.get(userId=uid)
 
     # Query ThumbnailModel objects for the current user and select the related Video object
-    thumbnail_list = ThumbnailModel.objects.filter(user=current_user).select_related('relatedvideo').all()
+    thumbnail_list = ThumbnailModel.objects.filter(
+        user=current_user).select_related('relatedvideo').all()
 
     # Create a list to store the serialized data
     serialized_list = []
@@ -275,9 +288,10 @@ def getProfileData(request, uid: str, ) -> JsonResponse:
     try:
         user = UserModel.objects.get(userId=uid)
         file_obj = ImageModel.objects.get(user=user)
-        returnData = {'success':True,'username':DisplayModel.objects.get(account_id=user).name, 'profileImageRoute':file_obj.image.url}
+        returnData = {'success': True, 'username': DisplayModel.objects.get(
+            account_id=user).name, 'profileImageRoute': file_obj.image.url}
     except ImageModel.DoesNotExist:
-        response = JsonResponse({"success":False, "reason":"CantFindImage"})
+        response = JsonResponse({"success": False, "reason": "CantFindImage"})
         return response
 
     # Open and return the file as a response
@@ -285,14 +299,12 @@ def getProfileData(request, uid: str, ) -> JsonResponse:
     response.status_code = 200
     return response
 
-import random
-
 
 @api_view(["GET"])
-def get_random_videos(request, uid, amount, pks:str=''):
+def get_random_videos(request, uid, amount, pks: str = ''):
     # Step 1: Retrieve the current user from the request
-    current_user = UserModel.objects.get(userId = uid)
-    current_user_display = DisplayModel.objects.get(account = current_user)
+    current_user = UserModel.objects.get(userId=uid)
+    current_user_display = DisplayModel.objects.get(account=current_user)
     pks = pks.split("-")
     # Step 2: Get the current user's latitude and longitude (if available)
     user_latitude = None
@@ -315,11 +327,12 @@ def get_random_videos(request, uid, amount, pks:str=''):
     # Step 6: Check if the uploader of each video is within the user's maxdist (if available)
     nearby_videos = []
     for video in randomized_videos:
-        uploader = DisplayModel.objects.get(account = video.user)
+        uploader = DisplayModel.objects.get(account=video.user)
         if user_latitude and user_longitude and max_distance:
             uploader_latitude = float(uploader.latitude)
             uploader_longitude = float(uploader.longitude)
-            distance = calculate_distance(user_latitude, user_longitude, uploader_latitude, uploader_longitude)
+            distance = calculate_distance(
+                user_latitude, user_longitude, uploader_latitude, uploader_longitude)
             if distance <= max_distance and str(video.pk) not in pks and userGenderComp(DisplayModel.objects.all().get(account=video.user), current_user_display):
                 nearby_videos.append(video)
         else:
@@ -329,7 +342,7 @@ def get_random_videos(request, uid, amount, pks:str=''):
     video_list = []
     for video in nearby_videos:
         video_info = {
-            'pk':video.pk,
+            'pk': video.pk,
             'title': video.title,
             'video_url': video.video.url,
             # Add any other video information you want to include in the response
@@ -337,7 +350,9 @@ def get_random_videos(request, uid, amount, pks:str=''):
         video_list.append(video_info)
     print(video_list[0:amount])
     return JsonResponse({'videos': video_list[0:amount]})
-def userGenderComp(slave:DisplayModel, master:DisplayModel) ->bool:
+
+
+def userGenderComp(slave: DisplayModel, master: DisplayModel) -> bool:
     """
     goalDef : 
     To return a boolean if the users are compatible by gender and preferences
@@ -353,6 +368,8 @@ def userGenderComp(slave:DisplayModel, master:DisplayModel) ->bool:
         ret = True
     # print(ret)
     return ret
+
+
 @api_view(["GET"])
 def login(request, email: str, password: str) -> JsonResponse:
     # import lzma
@@ -375,7 +392,8 @@ def login(request, email: str, password: str) -> JsonResponse:
     if is_email_in_use(email) == True:
         user = UserModel.objects.filter(email=email).first()
         if user and check_password(password, user.password):
-            response = JsonResponse({"login": "successful", 'uid': str(user.userId)})
+            response = JsonResponse(
+                {"login": "successful", 'uid': str(user.userId)})
             return response
         else:
             return JsonResponse({"login": "unsuccessful"})
@@ -447,7 +465,8 @@ def get_matches(request) -> JsonResponse:
         R = 6371  # Radius of the Earth in kilometers
         dlon = radians(match_longitude - user_longitude)
         dlat = radians(match_latitude - user_latitude)
-        a = sin(dlat / 2) ** 2 + cos(radians(user_latitude)) * cos(radians(match_latitude)) * sin(dlon / 2) ** 2
+        a = sin(dlat / 2) ** 2 + cos(radians(user_latitude)) * \
+            cos(radians(match_latitude)) * sin(dlon / 2) ** 2
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         distance = R * c
 
@@ -456,22 +475,24 @@ def get_matches(request) -> JsonResponse:
             matches.append(matches)
 
     return JsonResponse({'matches': matches})
-def checkLikes(user1:DisplayModel, user2:UserModel):
-    user1_usermodel = user1.account
-    user2_displaymodel = DisplayModel.objects.get(account = user2)
-    if user2.currentLikes.contains(user1) and user1_usermodel.currentLikes.contains(user2_displaymodel):
-        test = MatchesModel.objects.create(user_1=user1_usermodel, user_2=user2)
-    else:
-        print("nah")
+# def checkLikes(user1:DisplayModel, user2:UserModel):
+#     user1_usermodel = user1.account
+#     user2_displaymodel = DisplayModel.objects.get(account = user2)
+#     if user2.currentLikes.contains(user1) and user1_usermodel.currentLikes.contains(user2_displaymodel):
+#         test = MatchesModel.objects.create(user_1=user1_usermodel, user_2=user2)
+#     else:
+#         print("nah")
+
+
 @api_view(['POST'])
 def setLike(request):
     pk = request.data['video']
     action = request.data['action']
     video = VideoModel.objects.all().get(pk=pk)
     if action == "ADD":
-        video.likes = video.likes+1;
+        video.likes = video.likes+1
     elif action == "DISLIKE":
-        video.likes = video.likes-1;
+        video.likes = video.likes-1
     else:
         pass
     video.save()
@@ -481,7 +502,9 @@ def setLike(request):
     # liking_user = UserModel.objects.get(userId = request.data['uid'])
     # liking_user.currentLikes.add(liked_user)
     # checkLikes(liked_user, liking_user)
-    return JsonResponse({'test':True})
+    return JsonResponse({'test': True})
+
+
 @csrf_exempt
 @api_view(['POST'])
 def update_user(request):
@@ -496,49 +519,56 @@ def update_user(request):
     """
     uid = request.data['uid']
     print(request.data)
-    user = DisplayModel.objects.filter(account=UserModel.objects.get(userId=uid))[0]
+    user = DisplayModel.objects.filter(
+        account=UserModel.objects.get(userId=uid))[0]
     location = request.data['location']
     user.longitude = location['longitude']
     user.latitude = location['latitude']
     user.save()
-    return JsonResponse({"Success":True})
+    return JsonResponse({"Success": True})
+
 
 @api_view(['GET'])
 def getLikes(request, userId):
     # print(UserModel.objects.get(name = "testgirl").userId)
-    user = UserModel.objects.get(userId = userId)
-    matches = MatchesModel.objects.filter(user_1 = user) | MatchesModel.objects.filter(user_2 = user)
+    user = UserModel.objects.get(userId=userId)
+    matches = MatchesModel.objects.filter(
+        user_1=user) | MatchesModel.objects.filter(user_2=user)
     serialized_data = []
     for match in matches:
-        if str(match.user_1.userId) == userId:#if user1's userid isn't the passed in userid
-            image = ImageModel.objects.get(user = match.user_2)
-            print(user,"u2", match.user_2)
+        if str(match.user_1.userId) == userId:  # if user1's userid isn't the passed in userid
+            image = ImageModel.objects.get(user=match.user_2)
+            print(user, "u2", match.user_2)
         elif str(match.user_2.userId) == userId:
-            image = ImageModel.objects.get(user = match.user_1)
+            image = ImageModel.objects.get(user=match.user_1)
             print(user, "u1", match.user_1)
-        data ={
-            "id":image.user.userId,
-                "pfpurl":image.image.url,
-    "profileName":image.user.name,
-    "lastText":Message.objects.filter(match=match).last().content if Message.objects.filter(match=match).last() else None
+        data = {
+            "id": image.user.userId,
+            "pfpurl": image.image.url,
+            "profileName": image.user.name,
+            "lastText": Message.objects.filter(match=match).last().content if Message.objects.filter(match=match).last() else None
         }
         serialized_data.append(data)
-    return JsonResponse({"results":serialized_data})
+    return JsonResponse({"results": serialized_data})
+
 
 @api_view(['GET'])
 def getMessages(request, userId, otherid):
     match = MatchesModel.objects.get(
-                Q(user_1=userId, user_2=otherid) |
-                Q(user_1=otherid, user_2=userId)
-            )
-    messages = Message.objects.filter(match = match).order_by('timestamp').reverse()
+        Q(user_1=userId, user_2=otherid) |
+        Q(user_1=otherid, user_2=userId)
+    )
+    messages = Message.objects.filter(
+        match=match).order_by('timestamp').reverse()
     messages = [i.to_gifted_chat_message() for i in messages]
     # messages.reverse()
-    return JsonResponse({"data":messages})
+    return JsonResponse({"data": messages})
+
 
 def testNotif(request):
-    return(JsonResponse({"hekki":True}))
+    return (JsonResponse({"hekki": True}))
+
 
 def getVidsWithFire(request):
     import cloudinary
-    
+
