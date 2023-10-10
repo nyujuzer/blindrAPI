@@ -144,7 +144,7 @@ def uploadVid(request) -> JsonResponse:
     print(request.headers)
     video = request.FILES['video']
     print(type(request.FILES['video']))
-    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get('title')}, context={'request': request, 'multipart': True})
+    serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get('title'), 'description':request.POST.get('description')}, context={'request': request, 'multipart': True})
     
     if serializer.is_valid():
         instance = serializer.save()
@@ -466,12 +466,21 @@ def checkLikes(user1:DisplayModel, user2:UserModel):
 @api_view(['POST'])
 def setLike(request):
     pk = request.data['video']
-    print(pk)
-    video = VideoModel.objects.get(pk = int(pk))
-    liked_user = DisplayModel.objects.get(account = video.user)
-    liking_user = UserModel.objects.get(userId = request.data['uid'])
-    liking_user.currentLikes.add(liked_user)
-    checkLikes(liked_user, liking_user)
+    action = request.data['action']
+    video = VideoModel.objects.all().get(pk=pk)
+    if action == "ADD":
+        video.likes = video.likes+1;
+    elif action == "DISLIKE":
+        video.likes = video.likes-1;
+    else:
+        pass
+    video.save()
+    # print(pk)
+    # video = VideoModel.objects.get(pk = int(pk))
+    # liked_user = DisplayModel.objects.get(account = video.user)
+    # liking_user = UserModel.objects.get(userId = request.data['uid'])
+    # liking_user.currentLikes.add(liked_user)
+    # checkLikes(liked_user, liking_user)
     return JsonResponse({'test':True})
 @csrf_exempt
 @api_view(['POST'])
