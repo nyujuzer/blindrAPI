@@ -340,11 +340,13 @@ def get_random_videos(request, uid, amount, pks: str = ''):
 
     # Step 7: Return the list of nearby videos as a JSON response
     video_list = []
+    video: VideoModel
     for video in nearby_videos:
         video_info = {
             'pk': video.pk,
             'title': video.title,
             'video_url': video.video.url,
+            'otherid':video.user.userId
             # Add any other video information you want to include in the response
         }
         video_list.append(video_info)
@@ -475,14 +477,20 @@ def get_matches(request) -> JsonResponse:
             matches.append(matches)
 
     return JsonResponse({'matches': matches})
-# def checkLikes(user1:DisplayModel, user2:UserModel):
-#     user1_usermodel = user1.account
-#     user2_displaymodel = DisplayModel.objects.get(account = user2)
-#     if user2.currentLikes.contains(user1) and user1_usermodel.currentLikes.contains(user2_displaymodel):
-#         test = MatchesModel.objects.create(user_1=user1_usermodel, user_2=user2)
-#     else:
-#         print("nah")
-
+def checkLikes(user1:DisplayModel, user2:UserModel):
+    user1_usermodel = user1.account
+    user2_displaymodel = DisplayModel.objects.get(account = user2)
+    if user2.currentLikes.contains(user1) and user1_usermodel.currentLikes.contains(user2_displaymodel):
+        test = MatchesModel.objects.get_or_create(user_1=user1_usermodel, user_2=user2)
+        print(test)
+        user1_usermodel.currentLikes.remove(user2_displaymodel)
+        user2.currentLikes.remove(user1)
+        if test[1] :#test is a tuple with the object, and a bool stating if it was got or created.
+            return True
+        else:
+            return False
+    else:
+        return False
 
 @api_view(['POST'])
 def setLike(request):
@@ -494,15 +502,9 @@ def setLike(request):
     elif action == "DISLIKE":
         video.likes = video.likes-1
     else:
-        pass
+        return JsonResponse({'successful': False, 'message':'What the fuck have you done!?\n how in the fuck did you end up sending a wrong request?'})
     video.save()
-    # print(pk)
-    # video = VideoModel.objects.get(pk = int(pk))
-    # liked_user = DisplayModel.objects.get(account = video.user)
-    # liking_user = UserModel.objects.get(userId = request.data['uid'])
-    # liking_user.currentLikes.add(liked_user)
-    # checkLikes(liked_user, liking_user)
-    return JsonResponse({'test': True})
+    return JsonResponse({'successful': True})
 
 
 @csrf_exempt
@@ -530,7 +532,6 @@ def update_user(request):
 
 @api_view(['GET'])
 def getLikes(request, userId):
-    # print(UserModel.objects.get(name = "testgirl").userId)
     user = UserModel.objects.get(userId=userId)
     matches = MatchesModel.objects.filter(
         user_1=user) | MatchesModel.objects.filter(user_2=user)
@@ -564,11 +565,16 @@ def getMessages(request, userId, otherid):
     # messages.reverse()
     return JsonResponse({"data": messages})
 
+@api_view(['POST'])
+def makeMatch(request):
+    """
+    This view should be a post request, with the body containing:
+    uid: user's id
+    otherId:otherUser's id
+    """
+    liked_user = DisplayModel.objects.get(account = request.data['otherid'])
+    liking_user = UserModel.objects.get(userId = request.data['uid'])
+    liking_user.currentLikes.add(liked_user)
+    isMatch = checkLikes(liked_user, liking_user)
 
-def testNotif(request):
-    return (JsonResponse({"hekki": True}))
-
-
-def getVidsWithFire(request):
-    import cloudinary
-
+    return JsonResponse({"success":isMatch})
