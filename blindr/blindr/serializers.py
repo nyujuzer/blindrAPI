@@ -16,7 +16,7 @@ class ImageModelSerializer(serializers.ModelSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoModel
-        fields = ["user", 'video', 'title']
+        fields = ["user", 'video', 'title', 'description']
 class HobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = hobbiesModel

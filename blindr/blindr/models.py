@@ -144,6 +144,8 @@ class VideoModel(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='videos')
     video = models.FileField(upload_to="videos")
     title = models.CharField(max_length=100)
+    description = models.CharField(max_length=100, default="NULL")
+    likes = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
