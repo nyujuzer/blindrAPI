@@ -17,9 +17,6 @@ from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password, check_password
 from os import path, remove
 from .comp import compress
-import cloudinary
-import asyncio
-import zipfile
 
 
 def compressVideo(file, filename, instanceId, userId, title):
