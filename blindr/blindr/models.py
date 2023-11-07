@@ -1,4 +1,5 @@
 from django.db import models
+# from .fields import messageField
 from django.core.validators import MaxValueValidator, MinValueValidator
 import uuid
 from .globals import Globals
@@ -45,7 +46,7 @@ class UserModel(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return f"{self.name}-ACCOUNT"
 
 
 class DisplayModel(models.Model):
@@ -77,14 +78,20 @@ class DisplayModel(models.Model):
     latitude = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.name} - display. {Globals.Gender.Decode(self.gender)}'
+        return f'{self.name}-DISPLAY: {Globals.Gender.Decode(self.gender)} x {Globals.Gender.Decode(self.preferences)}'
 
 
 class MatchesModel(models.Model):
+    """
+    user_1: usermodel
+    user_2: usermodel
+    ephemeral: boolean
+    """
     user_1 = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="one")
     user_2 = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="two")
+    ephemeral = models.BooleanField(default=False)
     def __str__(self):
-        return f'match of {self.user_1} and {self.user_2}'
+        return f'{self.user_1} and {self.user_2}'
 
 class Message(models.Model):
     match = models.ForeignKey(MatchesModel, on_delete=models.CASCADE, related_name="messages")
@@ -107,7 +114,7 @@ class Message(models.Model):
         }
 
     def __str__(self):
-        return f'{self.sender} to {self.match}'
+        return f'{self.sender} to {self.match}, cont = {self.content}'
 
 
 class ImageModel(models.Model):
@@ -148,7 +155,7 @@ class VideoModel(models.Model):
     likes = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.title
+        return f"{self.title}-{self.user}"
 
 
 class ThumbnailModel(models.Model):
@@ -180,3 +187,19 @@ class ThumbnailModel(models.Model):
 
     def __str__(self):
         return f'Thumbnail for {self.relatedvideo.title}'
+
+class likes(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="liker")
+    tags = models.JSONField()
+
+"""
+User metrics to track:
+
+    Likes, tags
+
+    tags->taken from description
+    likes->self explainatory.
+
+possible db models:
+    likes(user, videopk, tags{possibly a dict?})
+"""

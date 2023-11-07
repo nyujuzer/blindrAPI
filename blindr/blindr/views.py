@@ -112,9 +112,9 @@ def finishSignUp(request) -> JsonResponse:
     """
     if request.method == 'POST':
         userId = request.data['uid']
+        image = request.FILES.get("image")
         user: UserModel = UserModel.objects.get(userId=userId)
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get(
-            "image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image': image, 'isProfilePic': True}, context={'request': request, 'multipart': True})
         user.maxdist = int(request.data['maxDist'])
         user.maxAge = int(request.data['maxAge'])
         user.save()
@@ -123,8 +123,11 @@ def finishSignUp(request) -> JsonResponse:
         user.save()
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+            response = JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+            return response
         else:
+            print(serializer.errors)
+            print(image)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
 
@@ -153,11 +156,14 @@ def uploadVid(request) -> JsonResponse:
 
     if serializer.is_valid():
         instance = serializer.save()
+        print("saved")
         # compressVideo(instance.video.path, request.POST.get('title'), instance.pk, str(user.userId), request.POST.get('title')) # Await the async function
         return JsonResponse({"success": True})
     else:
         if 'title' in serializer.errors.keys():
+            print("error in title")
             return JsonResponse({'success': False, "reason": "tooShort"})
+        print(serializer.errors)
         return JsonResponse({"success": False})
 
 
@@ -315,7 +321,6 @@ def get_random_videos(request, uid, amount, pks: str = ''):
 
     # Step 4: Filter the VideoModel objects associated with the current user
     videos = VideoModel.objects.exclude(user=current_user)
-    print(videos)
 
     # Step 5: Randomize the order of the videos
     randomized_videos = list(videos)
@@ -491,6 +496,7 @@ def checkLikes(user1:DisplayModel, user2:UserModel):
 
 @api_view(['POST'])
 def setLike(request):
+    print(request.data)
     pk = request.data['video']
     action = request.data['action']
     video = VideoModel.objects.all().get(pk=pk)
@@ -575,3 +581,4 @@ def makeMatch(request):
     isMatch = checkLikes(liked_user, liking_user)
 
     return JsonResponse({"success":isMatch})
+
