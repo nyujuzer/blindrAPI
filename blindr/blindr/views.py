@@ -542,11 +542,10 @@ def getLikes(request, userId):
     for match in matches:
         if str(match.user_1.userId) == userId:  # if user1's userid isn't the passed in userid
             image = ImageModel.objects.get(user=match.user_2)
-            print(user, "u2", match.user_2)
         elif str(match.user_2.userId) == userId:
             image = ImageModel.objects.get(user=match.user_1)
-            print(user, "u1", match.user_1)
         data = {
+            "ephemeral": match.ephemeral,
             "id": image.user.userId,
             "pfpurl": image.image.url,
             "profileName": image.user.name,

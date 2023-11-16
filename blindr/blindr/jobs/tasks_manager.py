@@ -1,9 +1,9 @@
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from .tasks import makeEphemerals
+from .tasks import handleEphemerals
 
 def start():
     print("start called")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(makeEphemerals, "interval", minutes=10)
+    scheduler.add_job(handleEphemerals, "interval", hours=24)
     scheduler.start()
