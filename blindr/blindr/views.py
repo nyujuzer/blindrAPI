@@ -1,3 +1,5 @@
+import datetime
+import json
 import random
 from math import radians, sin, cos, sqrt, atan2
 from time import sleep
@@ -147,8 +149,11 @@ def uploadVid(request) -> JsonResponse:
         JsonResponse: JSON response indicating the success status of the video upload.
     """
     user = UserModel.objects.get(userId=request.POST.get('uid'))
-    print(request.FILES)
-    print(request.headers)
+    headers = request.headers
+    idempotence:str = headers['idempotencetoken']
+    # Globals.handleIdempotenceSetToken(idempotence)
+    # Globals.handleIdempotence(idempotence)
+    # return JsonResponse({"TEMP":True})
     video = request.FILES['video']
     print(type(request.FILES['video']))
     serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get(
@@ -158,13 +163,20 @@ def uploadVid(request) -> JsonResponse:
         instance = serializer.save()
         print("saved")
         # compressVideo(instance.video.path, request.POST.get('title'), instance.pk, str(user.userId), request.POST.get('title')) # Await the async function
-        return JsonResponse({"success": True})
+        response = JsonResponse({"success": True})
+        response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+
+        return response
     else:
         if 'title' in serializer.errors.keys():
             print("error in title")
-            return JsonResponse({'success': False, "reason": "tooShort"})
+            response:JsonResponse = JsonResponse({'success': False, "reason": "tooShort"})
+            response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+            return response
         print(serializer.errors)
-        return JsonResponse({"success": False})
+        response = JsonResponse({"success": False})
+        response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+        return response
 
 
 def deleteFile(title: str):

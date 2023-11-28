@@ -3,12 +3,8 @@ from datetime import datetime
 from moviepy.editor import VideoFileClip
 from .settings import MEDIA_ROOT
 from os import path, mkdir
-# from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-# from moviepy.video.io.VideoFileClip import VideoFileClip
-# from moviepy.video import fx
-# import os
-# from .settings import MEDIA_ROOT, MEDIA_URL
-# from pyffmpeg import FFmpeg
+from apscheduler.schedulers.background import BackgroundScheduler
+# from .jobs import tasks_manager
 
 class Globals:
         class Gender(Enum):
@@ -79,3 +75,23 @@ class Globals:
                 # Save the thumbnail path to the database
                 thumbnail = ThumbnailModel(user=user, thumbnail=outf, relatedvideo=video)
                 thumbnail.save()
+        def handleIdempotenceSetToken(idempotence):
+                tokenElements = idempotence.split(";")
+                print(tokenElements)
+                initialTimeStamp = tokenElements[0].split("/")
+                initialTimeStampList = [i.split("-") for i in initialTimeStamp]
+                endTimeStamp = tokenElements[1].split("/")
+                endTimeStampList = [i.split("-") for i in endTimeStamp]
+                initialTime = datetime(year=int(initialTimeStampList[0][0]),
+                                                month=int(initialTimeStampList[0][1]),
+                                                day=int(initialTimeStampList[0][2]),
+                                                hour=int(initialTimeStampList[1][0]),
+                                                minute=int(initialTimeStampList[1][1]))
+                endTime = datetime(year=int(endTimeStampList[0][0]),
+                                                month=int(endTimeStampList[0][1]),
+                                                day=int(endTimeStampList[0][2]),
+                                                hour=int(endTimeStampList[1][0]),
+                                                minute=int(endTimeStampList[1][1]))
+                userDetails = tokenElements[2].split("/")
+        def handleIdempotence(idempotence):
+                pass
