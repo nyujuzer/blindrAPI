@@ -42,8 +42,13 @@ path('getRandomVideos/<str:uid>/<int:amount>/', get_random_videos),
 path('setLikes/', setLike),
 path('getLikes/<str:userId>/', getLikes),
 path('tryMatch/', makeMatch),
+# path('getEphemeral/<str:uid>/', getEphemeral),
 
 path('getMessages/<str:userId>/<str:otherid>/', getMessages),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+websocket_urlpatterns
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+
+from .jobs.tasks_manager import start
+start()

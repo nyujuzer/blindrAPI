@@ -1,3 +1,5 @@
+import datetime
+import json
 import random
 from math import radians, sin, cos, sqrt, atan2
 from time import sleep
@@ -112,9 +114,9 @@ def finishSignUp(request) -> JsonResponse:
     """
     if request.method == 'POST':
         userId = request.data['uid']
+        image = request.FILES.get("image")
         user: UserModel = UserModel.objects.get(userId=userId)
-        serializer = ImageModelSerializer(data={'user': user.userId, 'image': request.FILES.get(
-            "image"), 'isProfilePic': True}, context={'request': request, 'multipart': True})
+        serializer = ImageModelSerializer(data={'user': user.userId, 'image': image, 'isProfilePic': True}, context={'request': request, 'multipart': True})
         user.maxdist = int(request.data['maxDist'])
         user.maxAge = int(request.data['maxAge'])
         user.save()
@@ -123,8 +125,11 @@ def finishSignUp(request) -> JsonResponse:
         user.save()
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+            response = JsonResponse({'success': True, 'message': 'Image uploaded successfully'})
+            return response
         else:
+            print(serializer.errors)
+            print(image)
             return JsonResponse({'success': False, 'message': 'Image upload failed'})
 
 
@@ -144,8 +149,11 @@ def uploadVid(request) -> JsonResponse:
         JsonResponse: JSON response indicating the success status of the video upload.
     """
     user = UserModel.objects.get(userId=request.POST.get('uid'))
-    print(request.FILES)
-    print(request.headers)
+    headers = request.headers
+    idempotence:str = headers['idempotencetoken']
+    # Globals.handleIdempotenceSetToken(idempotence)
+    # Globals.handleIdempotence(idempotence)
+    # return JsonResponse({"TEMP":True})
     video = request.FILES['video']
     print(type(request.FILES['video']))
     serializer = VideoSerializer(data={"user": user.userId, 'video': video, "title": request.POST.get(
@@ -153,12 +161,22 @@ def uploadVid(request) -> JsonResponse:
 
     if serializer.is_valid():
         instance = serializer.save()
+        print("saved")
         # compressVideo(instance.video.path, request.POST.get('title'), instance.pk, str(user.userId), request.POST.get('title')) # Await the async function
-        return JsonResponse({"success": True})
+        response = JsonResponse({"success": True})
+        response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+
+        return response
     else:
         if 'title' in serializer.errors.keys():
-            return JsonResponse({'success': False, "reason": "tooShort"})
-        return JsonResponse({"success": False})
+            print("error in title")
+            response:JsonResponse = JsonResponse({'success': False, "reason": "tooShort"})
+            response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+            return response
+        print(serializer.errors)
+        response = JsonResponse({"success": False})
+        response['Access-Control-Allow-Origin'] = 'http://localhost:19006'
+        return response
 
 
 def deleteFile(title: str):
@@ -315,7 +333,6 @@ def get_random_videos(request, uid, amount, pks: str = ''):
 
     # Step 4: Filter the VideoModel objects associated with the current user
     videos = VideoModel.objects.exclude(user=current_user)
-    print(videos)
 
     # Step 5: Randomize the order of the videos
     randomized_videos = list(videos)
@@ -491,6 +508,7 @@ def checkLikes(user1:DisplayModel, user2:UserModel):
 
 @api_view(['POST'])
 def setLike(request):
+    print(request.data)
     pk = request.data['video']
     action = request.data['action']
     video = VideoModel.objects.all().get(pk=pk)
@@ -536,11 +554,10 @@ def getLikes(request, userId):
     for match in matches:
         if str(match.user_1.userId) == userId:  # if user1's userid isn't the passed in userid
             image = ImageModel.objects.get(user=match.user_2)
-            print(user, "u2", match.user_2)
         elif str(match.user_2.userId) == userId:
             image = ImageModel.objects.get(user=match.user_1)
-            print(user, "u1", match.user_1)
         data = {
+            "ephemeral": match.ephemeral,
             "id": image.user.userId,
             "pfpurl": image.image.url,
             "profileName": image.user.name,
@@ -575,3 +592,4 @@ def makeMatch(request):
     isMatch = checkLikes(liked_user, liking_user)
 
     return JsonResponse({"success":isMatch})
+

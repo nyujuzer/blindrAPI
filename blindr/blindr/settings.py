@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from os import path
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -34,7 +36,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'blindr',
     # 'chat',
-    'daphne',    
+    'daphne',
 
     'corsheaders',
     'django.contrib.admin',
@@ -45,12 +47,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_METHODS = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:19006"
+]
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT"]
 
 MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -59,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = 'blindr.urls'
@@ -84,8 +94,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'blindr.wsgi.application'
 ASGI_APPLICATION = 'blindr.asgi.application'
 CHANNEL_LAYERS = {
-    'default':{
-        'BACKEND':'channels.layers.InMemoryChannelLayer',
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     }
 }
 
@@ -134,6 +144,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+CELERY_BEAT_SCHEDULE = {
+    'my-periodic-task': {
+        'task': 'blindr.tasks.my_periodic_task',
+        'schedule': timedelta(seconds=10),
+    },
+}
+
+
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/static/'
 STATIC_URL = '/static/'
@@ -143,9 +167,18 @@ MEDIA_ROOT = path.join(BASE_DIR, 'media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
-CORS_ALLOWED_HEADERS = [
-    'Accept',
-    'Content-Type',
+CORS_ORIGIN_WHITELIST = [
+    'https://localhost:19006'
 ]
