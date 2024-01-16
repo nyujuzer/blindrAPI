@@ -7,31 +7,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # from .jobs import tasks_manager
 
 class Globals:
-        class Gender(Enum):
+        class EGender(Enum):
                 MALE = 1
                 FEMALE = 2
                 ENBY = 3
                 ANY = 4
                 NONE = 404
-                def Encode(nem):
-                        for gender in Globals.Gender.__members__.values():
-                                if gender.name.upper() == nem.upper():
-                                        return gender.value
-                        else:return Globals.Gender.NONE.value
-                
-                def Decode(code):
-                        if code == 1:
-                                return "MALE"
-                        elif code == 2:
-                                return "FEMALE"
-                        elif code == 3:
-                                return "ENBY"
-                        elif code == 4:
-                                return "ANY"
-                        elif code == 404:
-                                return "NONE"
-                        else:
-                                return "UNKNOWN"
+        class Gender():
+                def Encode(nem) -> int:
+                        return Globals.EGender[nem].value
+    
+                def Decode(code) -> str:
+                        return Globals.EGender(code).name
 
 
         def deconstruct(object:object, attribute:str, sep:str):

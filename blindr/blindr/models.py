@@ -2,6 +2,7 @@ from django.db import models
 # from .fields import messageField
 from django.core.validators import MaxValueValidator, MinValueValidator
 import uuid
+import datetime
 from .globals import Globals
 
 class hobbiesModel(models.Model):
@@ -77,6 +78,12 @@ class DisplayModel(models.Model):
     longitude = models.CharField(max_length=10, null=True, blank=True)
     latitude = models.CharField(max_length=10, null=True, blank=True)
 
+    def getAgeInYear(self)->int:
+        birthdate = self.age
+        year, month, day = map(int, str(birthdate).split("-"))
+        today = datetime.date.today()
+        age = today.year - year - ((today.month, today.day) < (month, day))
+        return age
     def __str__(self):
         return f'{self.name}-DISPLAY: {Globals.Gender.Decode(self.gender)} x {Globals.Gender.Decode(self.preferences)}'
 

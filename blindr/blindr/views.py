@@ -356,11 +356,19 @@ def get_random_videos(request, uid, amount, pks: str = ''):
     video_list = []
     video: VideoModel
     for video in nearby_videos:
+        user = DisplayModel.objects.get(account=video.user)
         video_info = {
             'pk': video.pk,
             'title': video.title,
             'video_url': video.video.url,
-            'otherid':video.user.userId
+            'otherid':video.user.userId,
+            'user':{
+                'username':user.name,
+                'gender':Globals.Gender.Decode(user.gender).lower(),
+                'age':user.getAgeInYear()
+            },
+            'description':video.description,
+            'likes':video.likes,
             # Add any other video information you want to include in the response
         }
         video_list.append(video_info)
